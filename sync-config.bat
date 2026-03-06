@@ -51,14 +51,18 @@ if exist "%SCRIPT_DIR%\.gemini" (
 
     REM 删除旧配置目录（保留认证信息）
     if exist "%HOME_DIR%\.gemini\commands" rmdir /s /q "%HOME_DIR%\.gemini\commands"
+    if exist "%HOME_DIR%\.gemini\skills" rmdir /s /q "%HOME_DIR%\.gemini\skills"
+    if exist "%HOME_DIR%\.gemini\rules" rmdir /s /q "%HOME_DIR%\.gemini\rules"
     echo   已清理旧配置目录
 
     REM 复制配置
     xcopy /e /i /q "%SCRIPT_DIR%\.gemini\commands" "%HOME_DIR%\.gemini\commands"
+    xcopy /e /i /q "%SCRIPT_DIR%\.gemini\skills" "%HOME_DIR%\.gemini\skills"
+    xcopy /e /i /q "%SCRIPT_DIR%\.gemini\rules" "%HOME_DIR%\.gemini\rules"
     copy /y "%SCRIPT_DIR%\.gemini\GEMINI.md" "%HOME_DIR%\.gemini\GEMINI.md" >nul
     copy /y "%SCRIPT_DIR%\.gemini\settings.json" "%HOME_DIR%\.gemini\settings.json" >nul
 
-    echo   [√] commands/ GEMINI.md settings.json
+    echo   [√] commands/ skills/ rules/ GEMINI.md settings.json
 ) else (
     echo [Gemini CLI] 源目录不存在，跳过
 )

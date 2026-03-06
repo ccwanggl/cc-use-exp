@@ -50,15 +50,17 @@ if [[ -d "${SCRIPT_DIR}/.gemini" ]]; then
     mkdir -p ~/.gemini
 
     # 删除旧配置目录（保留认证信息）
-    rm -rf ~/.gemini/commands
+    rm -rf ~/.gemini/commands ~/.gemini/skills ~/.gemini/rules
     echo -e "${YELLOW}  已清理旧配置目录${NC}"
 
     # 复制配置
     cp -r "${SCRIPT_DIR}/.gemini/commands" ~/.gemini/
+    cp -r "${SCRIPT_DIR}/.gemini/skills" ~/.gemini/
+    cp -r "${SCRIPT_DIR}/.gemini/rules" ~/.gemini/
     cp "${SCRIPT_DIR}/.gemini/GEMINI.md" ~/.gemini/
     cp "${SCRIPT_DIR}/.gemini/settings.json" ~/.gemini/
 
-    echo -e "${GREEN}  ✓ commands/ GEMINI.md settings.json${NC}"
+    echo -e "${GREEN}  ✓ commands/ skills/ rules/ GEMINI.md settings.json${NC}"
 else
     echo -e "${YELLOW}[Gemini CLI] 源目录不存在，跳过${NC}"
 fi

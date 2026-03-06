@@ -9,7 +9,7 @@
 >
 > 按费力度从低到高，用最少操作获得最大帮助
 
-[![version](https://img.shields.io/badge/version-1.0.13-blue.svg)](https://github.com/doccker/cc-use-exp)
+[![version](https://img.shields.io/badge/version-1.0.14-blue.svg)](https://github.com/doccker/cc-use-exp)
 [![license](https://img.shields.io/badge/license-Custom-green.svg)](./LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude_Code-Config-orange.svg)](https://docs.anthropic.com/claude-code)
 [![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-Config-purple.svg)](https://github.com/google-gemini/gemini-cli)
@@ -69,14 +69,14 @@
 | 特性 | Claude Code | Gemini CLI |
 |------|-------------|------------|
 | 主配置文件 | `.claude/CLAUDE.md` | `.gemini/GEMINI.md` |
-| 规则目录 | `.claude/rules/` ✅ | 不支持 ❌ |
-| 技能目录 | `.claude/skills/` ✅ | 不支持 ❌ |
+| 规则目录 | `.claude/rules/` ✅ | `.gemini/rules/` ✅（通过 @import） |
+| 技能目录 | `.claude/skills/` ✅ | `.gemini/skills/` ✅（v0.24.0+） |
 | 命令目录 | `.claude/commands/` (.md) | `.gemini/commands/` (.toml) |
 | 命令格式 | Markdown | TOML |
 
 **规则同步方式**：
-- Claude Code：规则拆分到 `rules/` 目录，按文件组织
-- Gemini CLI：所有规则必须写在 `GEMINI.md` 一个文件中
+- Claude Code：规则拆分到 `rules/` 目录，按文件组织；技能放 `skills/` 按需加载
+- Gemini CLI：核心规则在 `GEMINI.md`；详细规范通过 `skills/` 按需激活（v0.24.0+）
 
 > 如需在两个工具间同步规则（如禁止行尾注释），需分别在 `.claude/rules/bash-style.md` 和 `.gemini/GEMINI.md` 中维护。
 
@@ -87,7 +87,7 @@
 | 工具 | 配置目录 | 部署位置 | 状态 |
 |------|---------|---------|------|
 | Claude Code | `.claude/` | `~/.claude/` | ✅ 完整支持 |
-| Gemini CLI | `.gemini/` | `~/.gemini/` | ✅ 基础支持 |
+| Gemini CLI | `.gemini/` | `~/.gemini/` | ✅ 完整支持 |
 
 ---
 
@@ -136,8 +136,10 @@ cp .claude/CLAUDE.md ~/.claude/
 
 ```bash
 # 只覆盖配置，保留认证信息
-rm -rf ~/.gemini/commands
+rm -rf ~/.gemini/commands ~/.gemini/skills ~/.gemini/rules
 cp -r .gemini/commands ~/.gemini/
+cp -r .gemini/skills ~/.gemini/
+cp -r .gemini/rules ~/.gemini/
 cp .gemini/GEMINI.md ~/.gemini/
 cp .gemini/settings.json ~/.gemini/
 ```
@@ -552,7 +554,22 @@ GEMINI.md 自动加载，提供以下保护：
 - 默认使用 Element Plus 主题，保持企业后台风格
 - 自动使用 Composition API + TypeScript
 
-### 1.2 中费力（显式调用）- Commands
+### 1.2 低费力（自动触发）- Skills
+
+**你需要做什么：正常写代码**
+
+修改前端组件或调整页面布局时，Gemini 会自动激活对应技能：
+
+| 技能 | 触发条件 | 提供的帮助 |
+|------|---------|-----------|
+| `frontend-safety` | 修改 Vue/React 组件、调整布局、创建覆盖层 | 数据绑定保护、布局一致性、覆盖层定位规范 |
+
+**效果示例**：
+- 修改 Vue 组件时，自动保护数据绑定和事件不被意外修改
+- 调整布局时，确保间距使用 4px 倍数、与其他页面一致
+- 创建覆盖层时，统一定位策略和 z-index 管理
+
+### 1.3 中费力（显式调用）- Commands
 
 **你需要做什么：输入 `/命令名`**
 
@@ -564,6 +581,7 @@ GEMINI.md 自动加载，提供以下保护：
 | `/fix` | 快速修复前端 Bug | `/fix 按钮点击无响应` |
 | `/code-review` | 审查前端代码 | `/code-review` |
 | `/quick-review` | 快速审查 | `/quick-review` |
+| `/commit-msg` | 生成 git commit message | `/commit-msg` 或 `/commit-msg all` |
 | `/debug` | 复杂问题排查 | `/debug 表格数据不显示` |
 
 ---
@@ -706,13 +724,20 @@ A: 分步骤处理：
 
 ```
 .gemini/
-├── GEMINI.md           # 核心规则（前端聚焦，~130行）
+├── GEMINI.md           # 核心规则（通过 @import 引入 rules）
 ├── settings.json       # 用户设置
+├── rules/              # 规则：通过 @import 始终加载
+│   ├── file-size-limit.md  # 文件行数限制
+│   └── frontend-style.md   # 前端规范补充（Pinia/API/TS/性能）
+├── skills/             # 技能：按需激活（v0.24.0+）
+│   └── frontend-safety/
+│       └── SKILL.md    # 前端修改安全约束、布局一致性、覆盖层规范
 └── commands/           # 自定义命令（.toml 格式）
     ├── layout.toml     # 布局重构
     ├── fix.toml        # 快速修复
     ├── code-review.toml
     ├── quick-review.toml
+    ├── commit-msg.toml # 生成 commit message
     └── debug.toml
 ```
 
@@ -806,13 +831,16 @@ gemini
 [ ! -d ~/.gemini ] && mkdir -p ~/.gemini
 
 # 2. 覆盖配置，保留认证信息
-rm -rf ~/.gemini/commands
+rm -rf ~/.gemini/commands ~/.gemini/skills ~/.gemini/rules
 cp -r .gemini/commands ~/.gemini/
+cp -r .gemini/skills ~/.gemini/
+cp -r .gemini/rules ~/.gemini/
 cp .gemini/GEMINI.md ~/.gemini/
 cp .gemini/settings.json ~/.gemini/
 
 # 3. 验证
 gemini
+# 输入 /skills list 查看技能是否加载
 # 输入 /layout 测试命令是否可用
 ```
 
@@ -820,13 +848,15 @@ gemini
 
 ```bash
 # 只覆盖配置，保留认证
-rm -rf ~/.gemini/commands
+rm -rf ~/.gemini/commands ~/.gemini/skills ~/.gemini/rules
 cp -r .gemini/commands ~/.gemini/
+cp -r .gemini/skills ~/.gemini/
+cp -r .gemini/rules ~/.gemini/
 cp .gemini/GEMINI.md ~/.gemini/
 cp .gemini/settings.json ~/.gemini/
 ```
 
-> **注意**：只覆盖配置文件（`commands/`、`GEMINI.md`、`settings.json`），保留认证信息（`oauth_creds.json`、`google_accounts.json`）和运行时数据（`installation_id`、`state.json`）。
+> **注意**：只覆盖配置文件（`commands/`、`skills/`、`rules/`、`GEMINI.md`、`settings.json`），保留认证信息（`oauth_creds.json`、`google_accounts.json`）和运行时数据（`installation_id`、`state.json`）。
 
 ---
 
