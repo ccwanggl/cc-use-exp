@@ -14,6 +14,9 @@
 [![Claude Code](https://img.shields.io/badge/Claude_Code-Config-orange.svg)](https://docs.anthropic.com/claude-code)
 [![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-Config-purple.svg)](https://github.com/google-gemini/gemini-cli)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/doccker/cc-use-exp/pulls)
+[![GitHub stars](https://img.shields.io/github/stars/doccker/cc-use-exp)](https://github.com/doccker/cc-use-exp/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/doccker/cc-use-exp)](https://github.com/doccker/cc-use-exp/network)
+[![GitHub watchers](https://img.shields.io/github/watchers/doccker/cc-use-exp)](https://github.com/doccker/cc-use-exp/watchers)
 
 </div>
 
