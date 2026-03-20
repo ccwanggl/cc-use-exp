@@ -23,9 +23,31 @@
 
 ---
 
+## 解决什么问题
+
+AI 编码助手（Claude Code、Gemini CLI、Codex、Cursor 等）正在改变开发方式，但实际使用中普遍存在以下痛点：
+
+| 痛点 | 表现 |
+|------|------|
+| 每次重复交代 | AI 没有持久记忆，每个 session 都要重新说明技术栈、编码规范、项目结构 |
+| 配置文件碎片化 | Claude 要 `CLAUDE.md`，Codex 要 `AGENTS.md`，Cursor 要 `.cursorrules`，Gemini 要 `GEMINI.md`，各自维护一份 |
+| 规则写了但没用好 | 配置文件越写越长，token 消耗飙升，模型注意力被稀释，反而降低代码质量 |
+| AI 常见翻车 | 修改测试来适配 bug、过度重构、生成 AI 模板风 UI、用保留字做 SQL 别名、忽略并发安全 |
+| 缺乏防护机制 | 没有规则约束时，AI 会执行危险命令、删除文件、跳过测试、中途放弃任务 |
+
+本项目提供一套经过实战验证的配置模板，一次配置，三个工具同时生效：
+
+- 分层加载（rules 常驻 + skills 按需 + commands 显式调用），控制 token 消耗
+- 内置防御性规则，防止 AI 常见翻车行为
+- 开箱即用的开发命令（`/fix`、`/review`、`/optimize`、`/new-feature` 等）
+- 同时覆盖 Claude Code、Gemini CLI、Codex 三套配置，一键同步
+
+---
+
 <details>
 <summary><strong>📑 目录导航</strong></summary>
 
+- [解决什么问题](#解决什么问题)
 - [项目定位](#项目定位)
 - [快速部署](#快速部署)
 - **Part 1: Claude Code**
