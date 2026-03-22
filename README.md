@@ -5,7 +5,7 @@
 <!-- 封面图 -->
 <img src="./cover.svg" alt="AI 编码助手配置体系" width="100%" style="max-width: 800px" />
 
-> 保留你熟悉的 CLI，让 Claude Code、Gemini CLI 和 Codex 开箱即用
+> 保留你熟悉的 CLI/IDE，让 Claude Code、Gemini CLI 和 Codex 开箱即用
 >
 > 按费力度从低到高，用最少操作获得最大帮助
 
@@ -14,6 +14,7 @@
 [![Claude Code](https://img.shields.io/badge/Claude_Code-Config-orange.svg)](https://docs.anthropic.com/claude-code)
 [![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-Config-purple.svg)](https://github.com/google-gemini/gemini-cli)
 [![Codex](https://img.shields.io/badge/Codex-Config-black.svg)](https://developers.openai.com/codex/)
+[![Cursor](https://img.shields.io/badge/Cursor-Config-blue.svg)](https://www.cursor.com/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/doccker/cc-use-exp/pulls)
 [![GitHub stars](https://img.shields.io/github/stars/doccker/cc-use-exp)](https://github.com/doccker/cc-use-exp/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/doccker/cc-use-exp)](https://github.com/doccker/cc-use-exp/network)
@@ -34,7 +35,7 @@
 
 ## 核心收益
 
-- 一次维护，三套工具分别同步到各自用户级入口
+- 一次维护，四套工具分别同步到各自用户级入口
 - 分层加载（rules 常驻 + skills 按需 + workflow 显式调用），减少常驻上下文负担
 - 内置防御性规则，降低修改测试适配错误、危险命令、过度重构等常见问题
 - 保留你熟悉的 CLI，不强迫切换到新的交互方式
@@ -107,6 +108,10 @@ tools\sync-config.bat
   - [快速开始](#1-快速开始-1)
   - [前端场景速查](#2-前端场景速查)
 - **Part 3: Codex**
+- **Part 4: Cursor**
+  - [快速开始](#1-快速开始-2)
+  - [Commands](#14-主动调用---commands)
+  - [目录结构](#4-目录结构-1)
 - [参考资料](#参考资料)
 - [社区与支持](#社区与支持)
 - [许可声明](#许可声明)
@@ -123,43 +128,47 @@ tools\sync-config.bat
 本项目                      用户目录                               其他项目
 ├── .claude/  ──覆盖──>    ~/.claude/  <──读取──                 .claude/ (空)
 ├── .gemini/  ──覆盖──>    ~/.gemini/  <──读取──                 .gemini/ (空)
-└── .codex/   ──增量部署──> ~/.codex/ + ~/.agents/skills/ <──读取── .codex/ (空)
+├── .codex/   ──增量部署──> ~/.codex/ + ~/.agents/skills/ <──读取── .codex/ (空)
+└── .cursor/  ──增量部署──> ~/.cursor/rules/ + ~/.cursor/skills/ <──读取── .cursor/ (空)
 ```
 
 - **本项目**：配置开发/维护环境，不参与实际业务开发
 - **用户目录**：实际生效的配置
 - **其他项目**：配置目录为空，自动使用用户目录配置
 
-### 三套配置的关系
+### 四套配置的关系
 
 | 目录 | 服务对象 | 说明 |
 |------|---------|------|
 | `.claude/` | Claude Code | Anthropic 的 CLI 工具 |
 | `.gemini/` | Gemini CLI | Google 的 CLI 工具 |
 | `.codex/` | Codex | OpenAI 的 CLI 工具，项目内维护权威源，部署时分发到 `~/.codex/` 和 `~/.agents/skills/` |
+| `.cursor/` | Cursor | AI IDE，增量部署到 `~/.cursor/rules/` 和 `~/.cursor/skills/` |
 
-**三者相互独立**：
+**四者相互独立**：
 - Claude Code 只读取 `~/.claude/`，不读取 `~/.gemini/`
 - Gemini CLI 只读取 `~/.gemini/`，不读取 `~/.claude/`
 - Codex 的全局入口是 `~/.codex/AGENTS.md`、`~/.codex/rules/` 和 `~/.agents/skills/`
+- Cursor 读取 `~/.cursor/rules/`（用户级规则）和 `~/.cursor/skills/`（用户级技能）
 - 配置内容可能相似（如禁止行为、技术栈偏好），但这不是重复，而是各自需要的独立配置
 
 ### 配置能力差异
 
-| 特性 | Claude Code | Gemini CLI | Codex |
-|------|-------------|------------|-------|
-| 主配置文件 | `.claude/CLAUDE.md` | `.gemini/GEMINI.md` | `.codex/global/AGENTS.md` → `~/.codex/AGENTS.md` |
-| 规则目录 | `.claude/rules/` ✅ | `.gemini/rules/` ✅（通过 @import） | `.codex/global/rules/` → `~/.codex/rules/` |
-| 技能目录 | `.claude/skills/` ✅ | `.gemini/skills/` ✅（v0.24.0+） | `.codex/skills/` → `~/.agents/skills/` |
-| 命令目录 | `.claude/commands/` (.md) | `.gemini/commands/` (.toml) | 无独立命令目录，使用显式 workflow skills |
-| 命令格式 | Markdown | TOML | `SKILL.md` + `agents/openai.yaml` |
+| 特性 | Claude Code | Gemini CLI | Codex | Cursor |
+|------|-------------|------------|-------|--------|
+| 主配置文件 | `.claude/CLAUDE.md` | `.gemini/GEMINI.md` | `.codex/global/AGENTS.md` → `~/.codex/AGENTS.md` | 无（规则即配置） |
+| 规则目录 | `.claude/rules/` ✅ | `.gemini/rules/` ✅（通过 @import） | `.codex/global/rules/` → `~/.codex/rules/` | `.cursor/rules/` ✅（.mdc 格式） |
+| 技能目录 | `.claude/skills/` ✅ | `.gemini/skills/` ✅（v0.24.0+） | `.codex/skills/` → `~/.agents/skills/` | `.cursor/skills/` ✅ |
+| 命令目录 | `.claude/commands/` (.md) | `.gemini/commands/` (.toml) | 无独立命令目录，使用显式 workflow skills | `.cursor/commands/` (.md) |
+| 命令格式 | Markdown | TOML | `SKILL.md` + `agents/openai.yaml` | Markdown（部署为 SKILL.md） |
 
 **规则同步方式**：
 - Claude Code：规则拆分到 `rules/` 目录，按文件组织；技能放 `skills/` 按需加载
 - Gemini CLI：核心规则在 `GEMINI.md`；详细规范通过 `skills/` 按需激活（v0.24.0+）
 - Codex：全局仅保留极薄 `AGENTS.md` 和审批 `rules`；绝大多数通用规范放进 `skills`，通过渐进式披露按需加载
+- Cursor：规则用 `.mdc` 格式支持 `alwaysApply` / `globs` / 智能匹配；技能通过 `description` 语义匹配按需加载
 
-> 如需在两个工具间同步规则（如禁止行尾注释），需分别在 `.claude/rules/bash-style.md` 和 `.gemini/GEMINI.md` 中维护。
+> 如需在多个工具间同步规则（如禁止行尾注释），需分别在 `.claude/rules/bash-style.md`、`.gemini/GEMINI.md`、`.cursor/rules/bash-style.mdc` 中维护。
 
 ---
 
@@ -1173,6 +1182,191 @@ codex -p cc-deep
 
 ---
 
+# Part 4: Cursor 配置
+
+> **定位**：Cursor 采用"rules 常驻/条件加载 + skills 按需语义匹配"的方案。增量部署到 `~/.cursor/rules/` 和 `~/.cursor/skills/`。
+
+---
+
+## 1. 快速开始
+
+首次使用或更新 `.cursor/` 后，在项目根目录执行：
+
+- **macOS/Linux**: `./tools/sync-config.sh`
+- **Windows**: `tools\sync-config.bat`
+
+脚本会把 `.cursor/` 分发到 Cursor 的用户级目录：
+
+| 类型 | 用户级落点 | 作用 |
+|------|-----------|------|
+| Rules | `~/.cursor/rules/` | 常驻或条件加载的规则 |
+| Skills | `~/.cursor/skills/` | 按需语义匹配的技能 |
+| Commands | `~/.cursor/skills/` | `/命令` 式技能（通过 Skills 机制实现） |
+| Templates | `~/.cursor/templates/` | 命令依赖的模板文件 |
+
+### 1.1 零费力（自动生效）- Rules
+
+**你需要做什么：同步一次配置，然后正常使用 Cursor**
+
+这些规则在 Cursor 中自动生效：
+
+| 规则 | 类型 | 作用 |
+|------|------|------|
+| `defensive.mdc` | Always Apply | 防止测试篡改、过度工程化、中途放弃 |
+| `ops-safety.mdc` | Glob 匹配 | 操作 .sh/Dockerfile 时触发运维安全规则 |
+| `bash-style.mdc` | Glob 匹配 | 操作 .sh/Dockerfile/Makefile 时触发 Bash 规范 |
+| `doc-sync.mdc` | Glob 匹配 | 修改配置文件时提醒更新文档 |
+| `date-calc.mdc` | Glob 匹配 | 操作代码文件时触发日期计算规则 |
+| `file-size-limit.mdc` | Glob 匹配 | 操作代码文件时触发行数限制规则 |
+
+**Cursor 规则类型说明**：
+
+| 类型 | frontmatter | 行为 |
+|------|-------------|------|
+| Always Apply | `alwaysApply: true` | 每次会话都加载 |
+| Glob 匹配 | `globs: "**/*.go"` | 匹配文件时加载 |
+| 智能匹配 | `description` 必填 | Agent 根据描述决定是否应用 |
+| 手动引用 | 无特殊标记 | 仅在 @ 提及规则时应用 |
+
+### 1.2 低费力（自动触发）- Skills
+
+**你需要做什么：正常写代码**
+
+Cursor Agent 会根据技能的 `description` 语义匹配，自动加载对应技能：
+
+| 技能 | 触发条件 | 提供的帮助 |
+|------|---------|-----------|
+| `go-dev` | 操作 `.go` 文件 | 命名约定、错误处理、并发编程、测试规范 |
+| `java-dev` | 操作 `.java` 文件 | 命名约定、异常处理、Spring 规范、并发安全 |
+| `frontend-dev` | 操作 `.vue/.tsx/.css` 等 | UI 风格约束、Vue/React 规范、TypeScript |
+| `python-dev` | 操作 `.py` 文件 | 类型注解、pytest、异步编程 |
+| `bash-style` | 操作 `.sh/Dockerfile/Makefile` 等 | 注释规范、tee 写入、heredoc |
+| `ops-safety` | 执行系统命令、服务器运维 | 风险说明、回滚方案 |
+| `redis-safety` | 操作 Redis 相关代码 | 禁用 KEYS、SCAN 替代、Pipeline |
+| `size-check` | 描述"简化代码"、"检查文件大小" | 代码简化审查、文件行数扫描 |
+| `ruanzhu` | 执行 `/ruanzhu` 或描述"软著" | 软著源代码 DOCX 生成规范 |
+| `ui-ux-pro-max` | 描述"设计感"、"专业UI" | 配色、排版、动效、响应式、无障碍 |
+
+### 1.3 Cursor 与其他工具的差异
+
+| 特性 | Claude Code / Gemini | Codex | Cursor |
+|------|---------------------|-------|--------|
+| 规则格式 | Markdown + `paths` | `.rules` 审批文件 | `.mdc`（Markdown Config） |
+| 技能触发 | `paths` 文件匹配 | 隐式/显式 | `description` 语义匹配 |
+| 命令系统 | `/command` 或 `$skill` | `$skill-name` | `/command`（通过 Skills 实现） |
+| 部署方式 | 覆盖式 / 增量 | 受管区块合并 + 增量 | 增量（manifest 管理） |
+
+### 1.4 主动调用 - Commands
+
+**你需要做什么：在 Cursor 对话中输入 `/命令名`**
+
+命令通过 Skills 机制实现，以 `/` 前缀触发：
+
+| 命令 | 分类 | 说明 |
+|------|------|------|
+| `/fix [问题]` | 日常 | 快速修复或系统化调试（`/fix debug`） |
+| `/review` | 日常 | 代码审查（`/review quick`、`/review security`） |
+| `/commit-msg` | 日常 | 分析变更生成结构化 commit message |
+| `/new-feature [功能]` | 开发 | 新功能全流程（审问 → 设计 → 实现），支持中断恢复 |
+| `/design [功能]` | 开发 | 技术设计文档（`/design checklist` 质量检查） |
+| `/requirement [功能]` | 开发 | 需求文档（`/requirement interrogate` 极刑审问） |
+| `/optimize` | 开发 | 系统优化扫描（`/optimize ux/perf/code`） |
+| `/style-extract` | 开发 | 从代码或设计图提取样式变量 |
+| `/project-init` | 初始化 | 为新项目生成 Cursor 配置脚手架 |
+| `/project-scan` | 初始化 | 扫描项目生成全套配置 |
+| `/ruanzhu` | 工具 | 软著源代码 DOCX 生成 |
+| `/status` | 诊断 | 显示当前配置加载状态 |
+
+---
+
+## 2. 常见场景速查
+
+| 场景 | 推荐方式 | 费力度 |
+|------|---------|--------|
+| 日常写代码 | 直接写，Rules + Skills 自动生效 | ⭐ |
+| 修个小 Bug | `/fix 问题描述` | ⭐ |
+| 正式代码审查 | `/review` 或 `/review quick` | ⭐⭐ |
+| 写 Go 代码 | 直接写，go-dev 自动加载 | ⭐ |
+| 写 Vue 组件 | 直接写，frontend-dev 自动加载 | ⭐ |
+| 生成 commit | `/commit-msg` | ⭐ |
+| 新功能开发 | `/new-feature 功能描述` | ⭐⭐ |
+| 系统优化 | `/optimize` 或 `/optimize perf` | ⭐⭐ |
+| 执行系统命令 | 描述操作，ops-safety 自动触发 | ⭐⭐ |
+| 代码瘦身 | 描述"简化代码"或"检查文件大小" | ⭐⭐ |
+
+---
+
+## 3. 最佳实践
+
+### 3.1 规则分层
+
+- **Always Apply**（`defensive`）：核心防御规则，每次对话都加载
+- **Glob 匹配**：按文件类型触发，不操作相关文件时不消耗 token
+- **Skills**：更详细的规范，由 Agent 根据语义按需加载
+- **Commands**：显式 `/命令` 调用，按需触发工作流
+
+### 3.2 与其他工具共用
+
+本项目的 Cursor 配置与 Claude Code、Gemini CLI、Codex 各自独立。规则内容语义一致，但格式适配各工具的原生机制。
+
+### 3.3 避免的做法
+
+- ❌ 不要手动修改 `~/.cursor/rules/` 和 `~/.cursor/skills/` 中由本项目同步的文件（会被同步覆盖，以 manifest 文件 `.cc-use-exp-managed` 追踪）
+- ❌ 不要把其他规则设为 Always Apply（除 `defensive` 外，其他规则按需加载更省 token）
+- ✅ 添加个人规则/技能时，避免与本项目文件同名
+
+---
+
+## 4. 目录结构
+
+```
+.cursor/
+├── rules/                       # 规则：.mdc 格式
+│   ├── defensive.mdc            # 防御性规则（Always Apply）
+│   ├── ops-safety.mdc           # 运维安全（Glob 匹配）
+│   ├── bash-style.mdc           # Bash 核心规范（Glob 匹配）
+│   ├── doc-sync.mdc             # 文档同步（Glob 匹配）
+│   ├── date-calc.mdc            # 日期计算（Glob 匹配）
+│   └── file-size-limit.mdc      # 文件行数限制（Glob 匹配）
+├── skills/                      # 技能：SKILL.md 格式（自动语义匹配）
+│   ├── go-dev/
+│   ├── java-dev/
+│   ├── frontend-dev/
+│   ├── python-dev/
+│   ├── bash-style/
+│   ├── ops-safety/
+│   ├── redis-safety/
+│   ├── size-check/
+│   ├── ruanzhu/
+│   └── ui-ux-pro-max/
+├── commands/                    # 命令：单 .md 文件（/命令 触发）
+│   ├── fix.md                   # /fix
+│   ├── review.md                # /review
+│   ├── commit-msg.md            # /commit-msg
+│   ├── new-feature.md           # /new-feature
+│   ├── design.md                # /design
+│   ├── requirement.md           # /requirement
+│   ├── optimize.md              # /optimize
+│   ├── style-extract.md         # /style-extract
+│   ├── project-init.md          # /project-init
+│   ├── project-scan.md          # /project-scan
+│   ├── ruanzhu.md               # /ruanzhu
+│   └── status.md                # /status
+└── templates/                   # 模板文件
+    └── ruanzhu/                 # 软著生成脚本
+```
+
+### 部署映射
+
+| 项目内 | 部署目标 | 方式 |
+|--------|---------|------|
+| `.cursor/rules/*.mdc` | `~/.cursor/rules/` | 增量复制，manifest 管理 |
+| `.cursor/skills/*` | `~/.cursor/skills/` | 增量复制，manifest 管理 |
+| `.cursor/commands/*.md` | `~/.cursor/skills/{name}/SKILL.md` | 单文件 → 目录，manifest 管理 |
+| `.cursor/templates/*` | `~/.cursor/templates/` | 增量复制 |
+
+---
+
 ## 参考资料
 
 ### Claude Code
@@ -1194,6 +1388,12 @@ codex -p cc-deep
 - [Codex Skills](https://developers.openai.com/codex/skills)
 - [Codex AGENTS.md 指南](https://developers.openai.com/codex/guides/agents-md)
 - [Codex Rules](https://developers.openai.com/codex/rules)
+
+### Cursor
+
+- [Cursor 官方文档](https://cursor.com/docs)
+- [Cursor Rules 配置](https://cursor.com/docs/rules)
+- [Cursor Agent Skills](https://cursor.com/docs/skills)
 
 ---
 
