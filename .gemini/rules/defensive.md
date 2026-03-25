@@ -57,3 +57,5 @@
 直接实现 > 抽象封装
 排查: 复现 -> 假设 -> 验证 -> 最小修复
 ```
+
+**HTTP 错误诊断**：当第三方 API 返回 HTTP 错误且 body 为空、headers 极简（缺少目标 API 的标准 headers），优先怀疑 CDN/WAF/代理层拦截，而非 API 本身的业务错误。验证方法：同一 API 的 GET 请求是否正常（GET 正常 POST 异常 → HTTP 客户端兼容性问题）。

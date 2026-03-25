@@ -995,6 +995,7 @@ gemini
 **效果示例**：
 - Codex 会优先先读代码、配置和脚本，再下结论
 - 遇到危险命令或越权执行时，会进入审批控制
+- 只读排查命令会尽量低摩擦放行，例如 `docker ps`、`kubectl get pods`、`systemctl status nginx`
 - 可以按任务复杂度切换 `codex -p cc-balanced` 或 `codex -p cc-deep`
 
 ### 1.2 低费力（自动触发）- Implicit Skills
@@ -1183,6 +1184,8 @@ codex -p cc-deep
 - `~/.codex/` 和 `~/.agents/skills/` 是部署产物
 - `~/.codex/config.toml` 只增量合并本项目的具名 profiles，不覆盖用户当前默认值
 - `AGENTS.md` 必须薄，语言与流程细节交给 skills
+- 不要把“世界观设定”“亲密关系口吻”“玩笑切换词”这类长篇人格 prompt 塞进 `.codex/global/AGENTS.md`；如确有风格偏好，只保留 1-2 条轻量交互原则，并默认专业输出
+- rules 应优先区分“检查类”与“修改类”命令：只读排查尽量放行，变更动作保持确认
 - rules 只负责审批和危险动作控制，不承载编码规范
 
 ---

@@ -33,3 +33,73 @@ prefix_rule(
         "git log --oneline -5",
     ],
 )
+
+prefix_rule(
+    pattern = ["systemctl", ["status", "is-active", "list-units", "show"]],
+    decision = "allow",
+    justification = "Read-only systemd inspection should not require an extra approval step.",
+    match = [
+        "systemctl status nginx",
+        "systemctl is-active docker",
+        "systemctl list-units --type=service",
+        "systemctl show nginx --property=ActiveState",
+    ],
+)
+
+prefix_rule(
+    pattern = ["launchctl", ["list", "print"]],
+    decision = "allow",
+    justification = "Read-only launchctl inspection is safe.",
+    match = [
+        "launchctl list",
+        "launchctl print system/com.apple.cfprefsd.xpc.daemon",
+    ],
+)
+
+prefix_rule(
+    pattern = ["docker", ["ps", "images", "logs", "inspect", "info", "version"]],
+    decision = "allow",
+    justification = "Common Docker inspection commands are read-only.",
+    match = [
+        "docker ps",
+        "docker images",
+        "docker logs api",
+        "docker inspect api",
+        "docker info",
+        "docker version",
+    ],
+)
+
+prefix_rule(
+    pattern = ["docker", "compose", ["config", "images", "logs", "ls", "ps"]],
+    decision = "allow",
+    justification = "Docker Compose inspection commands are read-only.",
+    match = [
+        "docker compose config",
+        "docker compose images",
+        "docker compose logs api",
+        "docker compose ls",
+        "docker compose ps",
+    ],
+)
+
+prefix_rule(
+    pattern = ["kubectl", ["get", "describe", "logs", "cluster-info"]],
+    decision = "allow",
+    justification = "Cluster inspection commands should stay low-friction.",
+    match = [
+        "kubectl get pods -A",
+        "kubectl describe pod api-123",
+        "kubectl logs deploy/api",
+        "kubectl cluster-info",
+    ],
+)
+
+prefix_rule(
+    pattern = ["kubectl", "config", "current-context"],
+    decision = "allow",
+    justification = "Reading the current kube context is safe.",
+    match = [
+        "kubectl config current-context",
+    ],
+)

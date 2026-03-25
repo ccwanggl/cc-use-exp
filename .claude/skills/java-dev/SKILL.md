@@ -388,6 +388,18 @@ public Result list(@RequestParam @Min(1) int page,
 
 ---
 
+## 第三方 API HTTP 客户端选型
+
+| 规则 | 说明 |
+|------|------|
+| ❌ 避免 `RestTemplate` 默认客户端调用国内平台 API | 默认 `HttpURLConnection` 的 POST 请求与微信/支付宝等 CDN 存在兼容性问题（已知触发 412/403） |
+| ✅ 优先用 `java.net.http.HttpClient`（JDK 11+） | 现代 HTTP 客户端，无 CDN 兼容性问题 |
+| ✅ 或配置 `HttpComponentsClientHttpRequestFactory` | 让 RestTemplate 底层走 Apache HttpClient |
+
+**诊断特征**：HTTP 错误 + body 为空 + response headers 极简（只有 Connection/Content-Length）= CDN 层拦截，不是 API 本身的响应。同一 API 的 GET 正常但 POST 异常时，优先怀疑 HTTP 客户端兼容性。
+
+---
+
 ## Native SQL 规范
 
 ### 别名避免 MySQL 保留字
@@ -446,6 +458,7 @@ log.debug("Finding user by id: " + userId);
 | `references/concurrency-db-patterns.md` | Get-Or-Create 并发、N+1 防范、原子更新、Redis+DB 一致性 |
 | `references/code-patterns.md` | 卫语句、枚举优化、策略工厂模式 |
 | `references/date-time.md` | 日期加减、账期计算、禁止月末对齐 |
+| `references/http-client.md` | 第三方 API HTTP 客户端选型、CDN 兼容性问题 |
 
 ---
 

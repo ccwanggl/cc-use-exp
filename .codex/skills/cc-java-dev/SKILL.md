@@ -21,6 +21,18 @@ description: Java 与 Spring 开发规范，适用于异常处理、集合、并
 - 并发代码要显式管理线程池和共享状态。
 - 测试优先覆盖行为和边界分支。
 
+---
+
+## 第三方 API HTTP 客户端选型
+
+| 规则 | 说明 |
+|------|------|
+| ❌ 避免 `RestTemplate` 默认客户端调用国内平台 API | 默认 `HttpURLConnection` 的 POST 请求与微信/支付宝等 CDN 存在兼容性问题（已知触发 412/403） |
+| ✅ 优先用 `java.net.http.HttpClient`（JDK 11+） | 现代 HTTP 客户端，无 CDN 兼容性问题 |
+| ✅ 或配置 `HttpComponentsClientHttpRequestFactory` | 让 RestTemplate 底层走 Apache HttpClient |
+
+**诊断特征**：HTTP 错误 + body 为空 + response headers 极简（只有 Connection/Content-Length）= CDN 层拦截，不是 API 本身的响应。同一 API 的 GET 正常但 POST 异常时，优先怀疑 HTTP 客户端兼容性。
+
 ## 按需展开
 
 - 风格：`references/style.md`
@@ -29,3 +41,4 @@ description: Java 与 Spring 开发规范，适用于异常处理、集合、并
 - 集合：`references/collections.md`
 - 并发：`references/concurrency.md`
 - 测试：`references/testing.md`
+- HTTP 客户端选型：`references/http-client.md`
