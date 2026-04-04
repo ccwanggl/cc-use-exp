@@ -193,6 +193,7 @@ tools\sync-config.bat
 | 规则 | 作用 | 触发场景 |
 |------|------|---------|
 | `claude-code-defensive.md` | 防止测试篡改、过度工程化、中途放弃 | 始终生效 |
+| `file-size-limit.md` | 文件行数超限时警告，提供简化选项 | 修改代码文件时 |
 | `ops-safety.md` | 危险命令确认、回滚方案、风险提示 | 始终生效（详细规范见 skills） |
 | `doc-sync.md` | 配置/结构变更时提醒更新文档 | 修改配置时 |
 | `bash-style.md` | Bash 核心规范：禁止行尾注释 | 始终生效（详细规范见 skills） |
@@ -200,6 +201,7 @@ tools\sync-config.bat
 
 **效果示例**：
 - Claude 不会修改测试来适配错误代码
+- 文件行数超限时自动警告，可选择立即简化或稍后处理
 - 执行 `sysctl` 等危险命令前会提示风险和回滚方案
 - 新增命令后会提醒你更新 README
 
@@ -218,11 +220,15 @@ tools\sync-config.bat
 | `bash-style` | 操作 `.sh/Dockerfile/Makefile/.md` 等 | 注释规范、tee 写入、heredoc、脚本规范 |
 | `ops-safety` | 执行系统命令、服务器运维 | 风险说明、回滚方案、问题排查原则 |
 | `redis-safety` | 操作 Redis 相关代码 | 禁用 KEYS、SCAN 替代、Pipeline、TTL 规范 |
-| `size-check` | `/size-check` 或描述"简化代码" | 代码简化审查、全项目文件行数扫描 |
+| `refactor-safety` | 重构代码（提取组件、合并逻辑） | 重构安全检查清单、防止丢失原始上下文 |
+| `field-mapping-safety` | 重构字段映射（dataIndex、枚举映射） | 防止字段名推测错误、枚举映射不完整 |
+| `size-check` | `/size-check` 或描述"简化代码" | 完整代码简化审查、全项目文件行数扫描 |
 
 **效果示例**：
 - 写 Go 代码时，自动遵循 Effective Go 规范
 - 写 Vue 组件时，自动使用 Composition API + TypeScript
+- 文件行数超限时，Rules 层会自动警告
+- 需要全项目扫描时，调用 `/size-check` 获取完整报告
 - 不操作这些文件时，不消耗额外 token
 
 ### 1.3 中费力（显式调用）- Commands
@@ -423,6 +429,21 @@ A: 这是 `doc-sync.md` 规则的要求。当你修改了配置（commands/skill
 
 A: 在 `.claude/skills/` 下创建新目录（如 `rust-dev/`），添加 `SKILL.md` 文件定义触发条件和规范内容，然后更新本文档。
 
+### Q: 为什么重构代码时 Claude 会反复确认原始代码？
+
+A: 这是 `refactor-safety` 和 `field-mapping-safety` skill 以及 `claude-code-defensive.md` 规则的要求。重构容易丢失原始上下文，导致：
+1. **表格列顺序错误**：列顺序错乱、列遗漏
+2. **字段名推测错误**：使用了错误的字段名（changedAt vs createdAt）
+3. **枚举映射不完整**：遗漏部分枚举值
+
+Claude 会：
+1. 完整读取原始代码（不凭记忆或推测）
+2. 制作对比清单（列/字段/枚举映射）
+3. 逐项验证一致性（数量/顺序/命名）
+4. 运行时测试（TypeScript 无法检测字段名错误）
+
+这是为了防止"假设驱动重构"、"记忆重构"和"字段名推测错误"。
+
 ---
 
 ## 6. 目录结构
@@ -444,6 +465,8 @@ A: 在 `.claude/skills/` 下创建新目录（如 `rust-dev/`），添加 `SKILL
 │   ├── bash-style/               # Bash 完整规范
 │   ├── ops-safety/               # 运维安全完整规范
 │   ├── redis-safety/             # Redis 安全与性能规范
+│   ├── refactor-safety/          # 重构安全检查清单
+│   ├── field-mapping-safety/     # 字段映射安全检查
 │   ├── size-check/               # 代码简化 + 文件行数扫描
 │   └── ruanzhu/                  # 软著源代码生成
 ├── commands/                     # 命令：显式调用

@@ -1,0 +1,3 @@
+name: cc-field-mapping-safety
+description: 字段映射安全检查，防止字段名推测错误和枚举映射不完整
+implicit: true

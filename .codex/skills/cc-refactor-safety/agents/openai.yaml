@@ -1,0 +1,3 @@
+name: cc-refactor-safety
+description: 代码重构安全检查，支持表格/数据结构/条件分支重构验证
+implicit: true

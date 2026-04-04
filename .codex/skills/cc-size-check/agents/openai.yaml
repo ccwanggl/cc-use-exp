@@ -1,6 +1,3 @@
-interface:
-  display_name: "size-check"
-  short_description: "显式代码简化、文件体量与复杂度审查工作流。"
-  default_prompt: "Use $size-check to identify the largest or most complex hot spots before reporting simplification opportunities with concrete evidence."
-policy:
-  allow_implicit_invocation: false
+name: cc-size-check
+description: 代码简化与文件行数检查，支持全项目扫描和单文件审查
+implicit: true
