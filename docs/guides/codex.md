@@ -280,7 +280,7 @@ codex -p cc-custom-instructions
 这样项目内路径和用户级 `~/.codex/instructions/` 的相对引用可以保持一致，不需要写绝对路径。
 推荐只在授权的 CTF / 靶场 / challenge 研究场景中启用，不作为通用开发 profile 常驻使用。
 
-![Chrome 插件独立配置界面（可指定自定义模型）](./pic/codex-unlock.png)
+![Chrome 插件独立配置界面（可指定自定义模型）](../../pic/codex-unlock.png)
 
 ## 4. 目录结构
 

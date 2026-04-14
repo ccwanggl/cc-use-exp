@@ -96,15 +96,15 @@
 
 
 `/cache-patch`验证效果:
-![cache-check](./pic/cache-check.png)
+![cache-check](../../pic/cache-check.png)
 
 
 注：`/patch` 只是让 CC 绕过 Chrome 订阅检查。如需要自定义渠道的插件，可以扫码联系作者免费获取插件地址，仅供学习使用。
 
-![Chrome 插件独立配置界面（可指定自定义模型）](./pic/cc-chrome-plugin-1.png)
+![Chrome 插件独立配置界面（可指定自定义模型）](../../pic/cc-chrome-plugin-1.png)
 
 Claude Code 联动 Chrome 扩展效果图：
-![Claude Code 联动 Chrome 扩展效果图](./pic/cc-chrome-plugin-2.png)
+![Claude Code 联动 Chrome 扩展效果图](../../pic/cc-chrome-plugin-2.png)
 
 ### 1.4 Claude Code 推荐插件（声明式安装）
 
