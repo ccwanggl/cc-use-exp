@@ -96,7 +96,7 @@
 
 在 Codex 会话中执行：
 ```bash
-$skill-installer install 
+$skill-installer install https://github.com/doccker/cc-use-exp/.codex/skills/cc-skill-installer 
 ```
 
 更新配置：重新执行上述命令
@@ -308,7 +308,7 @@ tools\sync-config.bat
 
 **中频命令**：`/optimize`、`/new-feature`、`/design`、`/requirement`
 
-**低频命令**：`/skill-install`、`/skill-update`、`/project-init`、`/patch`、`/status`
+**低频命令**：`/skill-install`、`/skill-update`、`/skill-uninstall`、`/project-init`、`/patch`、`/status`
 
 ---
 
