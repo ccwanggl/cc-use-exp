@@ -20,14 +20,16 @@ description: 结构化 Codex 配置状态检查工作流，适用于显式 statu
 3. 检查 `AGENTS.md` 和 `config.toml` 是否包含受管区块，`rules/`、`instructions/` 与 `skills/` 是否保留 manifest。
 4. 检查 `codex` CLI 是否可用，并报告版本。
 5. 若 `codex execpolicy check` 可用，抽样验证当前 rules 的 `allow/prompt/forbidden` 是否符合预期。
-6. 如果项目内与用户级数量不一致，优先判断是不是还没执行同步脚本。
-7. 输出状态、缺口和下一步，不做泛泛而谈的环境描述。
+6. 补查当前项目是否具备 `new-feature` 任务持久化前置条件：项目内 `.codex/tasks/`、`.codex/tasks/archived/`、`.codex/templates/` 是否存在。
+7. 如果项目内与用户级数量不一致，优先判断是不是还没执行同步脚本。
+8. 输出状态、缺口和下一步，不做泛泛而谈的环境描述。
 
 ## 输出要求
 
 - 明确区分“项目权威源”和“用户级生效配置”
 - 明确区分“文件已同步”与“规则已生效”
 - 报告缺失项、数量差异、受管区块异常和明显异常
+- 若当前项目缺少 `.codex/tasks/` 或 `.codex/templates/`，明确提示这会影响 `new-feature` 持久化，并建议先执行 `$project-init`
 - 若检测不到问题，要直接说明状态正常
 - 若怀疑未同步，明确建议执行 `tools/sync-config.sh`
 

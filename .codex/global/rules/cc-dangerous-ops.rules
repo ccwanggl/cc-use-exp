@@ -144,6 +144,17 @@ prefix_rule(
 )
 
 prefix_rule(
+    pattern = ["mkdir", "-p", [".codex/tasks", ".codex/tasks/archived", ".codex/templates"]],
+    decision = "prompt",
+    justification = "Initializing project-local .codex task directories writes into the current repository and should stay user-confirmed when workspace permission is required.",
+    match = [
+        "mkdir -p .codex/tasks",
+        "mkdir -p .codex/tasks/archived",
+        "mkdir -p .codex/templates",
+    ],
+)
+
+prefix_rule(
     pattern = ["rm"],
     decision = "forbidden",
     justification = "Use safer, reviewed file edits instead of direct deletion commands.",

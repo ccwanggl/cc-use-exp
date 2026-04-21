@@ -8,14 +8,22 @@
 | `.codex/global/rules/*.rules` | `~/.codex/rules/` | 增量复制，文件名保留 `cc-` 前缀 |
 | `.codex/instructions/*.md` | `~/.codex/instructions/` | 增量复制，清理当前项目受管文件 |
 | `.codex/skills/*` | `~/.agents/skills/` | 增量复制，保留目录名 |
+| `.codex/templates/` | `~/.codex/templates/` | 增量复制，供 workflow skill 复用模板 |
+| `.codex/tasks/` | `~/.codex/tasks/` | 仅同步目录骨架与占位文件，保证其他项目可继承任务目录 |
+| `.codex/{tasks,templates}` 骨架 | `~/.codex/project-template/.codex/` | 为其他项目提供可复制的项目级 `.codex` 目录骨架 |
 | `.codex/profiles/*.toml` | `~/.codex/config.toml` | 受管区块合并，只追加具名 profiles |
 
 ## 不同步内容
 
-- `.codex/templates/`
-- `.codex/tasks/`
 - `.codex/manifests/`
 - `.codex/.env`（仅作为可选代理模板，避免自动覆盖用户本地 `~/.codex/.env`）
+
+## 特殊同步说明
+
+- `tools/sync-config.sh` 会确保 `~/.codex/templates/` 与 `~/.codex/tasks/` 存在
+- `~/.codex/tasks/` 仅同步目录骨架与占位文件，不覆盖其他项目运行时新增的任务文件
+- `tools/sync-config.sh` 还会生成 `~/.codex/project-template/.codex/`，供其他项目直接复制项目级 `.codex` 骨架
+- 其他项目若未自带 `.codex/tasks/`，应先复制该骨架到项目根目录，再使用 `new-feature`
 
 ## 明确禁止
 

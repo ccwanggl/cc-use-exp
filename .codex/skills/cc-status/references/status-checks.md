@@ -19,6 +19,9 @@
 15. `~/.agents/skills/.cc-use-exp-managed`
 16. `~/.codex/config.toml` 中被本项目 profile 引用的 `./instructions/*.md` 是否存在
 17. `codex --version`
+18. 当前项目 `.codex/tasks/`
+19. 当前项目 `.codex/tasks/archived/`
+20. 当前项目 `.codex/templates/`
 
 如果 `codex execpolicy check` 可用，再做规则抽样验证：
 
@@ -32,6 +35,10 @@
 - 文件/同步状态：项目权威源、用户级部署产物、受管区块、manifest、数量差异
 - 规则生效状态：抽样命令、命中规则、实际决策、是否符合预期
 
+若当前项目缺少 `.codex/tasks/`、`.codex/tasks/archived/` 或 `.codex/templates/`，建议额外单列：
+
+- `new-feature` 前置条件：项目级 `.codex` 骨架是否齐全、是否建议先执行 `$project-init`
+
 常见结论：
 
 - 项目内有，用户级没有：通常是没执行同步脚本
@@ -41,4 +48,5 @@
 - AGENTS 缺少受管区块：通常是 `AGENTS.md` 还没合并，或被手工覆盖
 - rules/skills 缺少 manifest：通常是没走同步脚本，或用户级目录被手工改动
 - 文件都在但抽样规则不符合预期：优先怀疑用户级 rules 不是当前项目版本，或命中了更严格的外部规则
+- 当前项目缺少 `.codex/tasks/` 或 `.codex/templates/`：通常说明还没做项目级初始化，先执行 `$project-init`
 - `codex` 不可用：先看 CLI 是否安装或 PATH 是否正确

@@ -68,6 +68,53 @@ bash <(curl -sL https://raw.githubusercontent.com/doccker/cc-use-exp/main/tools/
 | Instructions | `~/.codex/instructions/` | 供 profile 通过 `model_instructions_file` 引用 |
 | Skills | `~/.agents/skills/` | 渐进式披露，按需加载 |
 
+同时还会生成一个“其他项目可复用的项目骨架”：
+
+| 类型 | 用户级落点 | 作用 |
+|------|-----------|------|
+| Project skeleton | `~/.codex/project-template/.codex/` | 给其他项目复制 `.codex/tasks/`、`.codex/tasks/archived/`、`.codex/templates/` 骨架 |
+
+如果你准备在**其他项目**里使用 `$new-feature`，建议先在该项目根目录执行：
+
+```bash
+mkdir -p .codex
+cp -R ~/.codex/project-template/.codex/tasks ./.codex/
+cp -R ~/.codex/project-template/.codex/templates ./.codex/
+```
+
+这样 `$new-feature` 在检查项目内 `.codex/tasks/` 时会直接命中可写目录，而不是误判为“项目目录不可写”。
+
+如果当前 Codex 会话对该项目目录尚未拿到写权限，`new-feature` / `project-init` 在尝试初始化项目内 `.codex/tasks/`、`.codex/tasks/archived/`、`.codex/templates/` 时，应优先触发 Codex 平台原生审批提示，由用户授权后继续；这不是自定义 UI 弹窗，而是平台自带的写入授权流程。
+
+如果你在其他项目里执行 `$new-feature` 时**没有看到平台审批提示**，而是直接收到“项目内 `.codex/tasks/` 不可写”之类的文本提示，优先按下面顺序排查：
+
+1. **先看项目内是否已有 `.codex/tasks/` 骨架**
+   ```bash
+   ls -la .codex
+   ls -la .codex/tasks
+   ```
+   如果目录本来就不存在，先执行 `$project-init`，或先复制用户级骨架到当前项目。
+
+2. **再判断 workflow 是否真的走到了 mkdir 写入动作**
+   - 如果只是文本里说“不可写”，但没有实际尝试初始化 `.codex/tasks/`
+   - 那说明这次会话还没走到可触发审批的写命令
+   - 这类情况优先重新执行 `$project-init`，让项目级 `.codex` 骨架先落地
+   - 注意：对一个**不存在的目录**直接做 `test -w .codex/tasks`，本来就会返回失败；这只能说明“目录还没创建”，不能直接得出“目录不可写”
+
+3. **最后再判断是不是当前项目根目录本身就不在可写工作区**
+   - 即使规则允许 `mkdir -p .codex/tasks ...` 走审批
+   - 如果当前会话对整个项目目录没有可写权限，仍可能在授权后失败
+
+推荐顺序：
+
+```text
+新项目 / 其他项目
+  └─ 先 $project-init
+      └─ 再 $new-feature
+```
+
+这样通常比直接在“还没有项目级 `.codex` 骨架”的仓库里先跑 `$new-feature` 更稳。
+
 **为什么不是直接复制到 `~/.codex/`？**
 
 因为 `~/.codex/` 同时还是 Codex 的运行态目录，会包含认证、历史、日志和缓存。项目只同步受管配置，不覆盖运行态文件。

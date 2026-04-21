@@ -24,6 +24,20 @@ CODEX_MANAGED_START="<!-- cc-use-exp codex managed:start -->"
 CODEX_MANAGED_END="<!-- cc-use-exp codex managed:end -->"
 CODEX_PROFILE_START="# cc-use-exp codex profiles:start"
 CODEX_PROFILE_END="# cc-use-exp codex profiles:end"
+SYNC_FAILURES=0
+
+run_sync_section() {
+    local section_name="$1"
+    shift
+
+    if "$@"; then
+        return 0
+    fi
+
+    SYNC_FAILURES=$((SYNC_FAILURES + 1))
+    print_line "${RED}[${section_name}] 同步失败，但脚本会继续后续分段${NC}"
+    return 0
+}
 
 merge_managed_block() {
     local src_file="$1"
@@ -198,13 +212,68 @@ sync_managed_skills() {
     mv "$new_manifest" "$manifest_file"
 }
 
+sync_managed_optional_tree() {
+    local src_dir="$1"
+    local dst_dir="$2"
+    local manifest_file="$dst_dir/.cc-use-exp-managed"
+    local new_manifest
+    local rel_path
+    local path_list
+
+    mkdir -p "$dst_dir"
+    new_manifest="$(mktemp)"
+    path_list="$(mktemp)"
+
+    if [[ -d "$src_dir" ]]; then
+        find "$src_dir" -mindepth 1 \( -type f -o -type d \) | sed "s#^$src_dir/##" | LC_ALL=C sort > "$path_list"
+
+        while IFS= read -r rel_path; do
+            [[ -n "$rel_path" ]] || continue
+            printf '%s\n' "$rel_path" >> "$new_manifest"
+
+            if [[ -d "$src_dir/$rel_path" ]]; then
+                mkdir -p "$dst_dir/$rel_path"
+                continue
+            fi
+
+            mkdir -p "$(dirname "$dst_dir/$rel_path")"
+            cp "$src_dir/$rel_path" "$dst_dir/$rel_path"
+        done < "$path_list"
+    fi
+
+    if [[ -f "$manifest_file" ]]; then
+        while IFS= read -r rel_path; do
+            [[ -n "$rel_path" ]] || continue
+            if ! grep -Fxq "$rel_path" "$new_manifest"; then
+                rm -rf "$dst_dir/$rel_path"
+            fi
+        done < "$manifest_file"
+    fi
+
+    rm -f "$path_list"
+    mv "$new_manifest" "$manifest_file"
+}
+
+sync_codex_project_skeleton() {
+    local dst_dir="${HOME}/.codex/project-template"
+
+    mkdir -p "$dst_dir/.codex/tasks/archived" "$dst_dir/.codex/templates"
+    cp "${SCRIPT_DIR}/.codex/tasks/.gitkeep" "$dst_dir/.codex/tasks/.gitkeep"
+    cp "${SCRIPT_DIR}/.codex/tasks/archived/.gitkeep" "$dst_dir/.codex/tasks/archived/.gitkeep"
+    cp "${SCRIPT_DIR}/.codex/templates/.gitkeep" "$dst_dir/.codex/templates/.gitkeep"
+}
+
 print_line "${GREEN}=== 配置同步工具 ===${NC}"
 print_line "源目录: ${SCRIPT_DIR}"
 print_line "目标目录: ${HOME}"
 printf '\n'
 
-# --- Claude Code ---
-if [[ -d "${SCRIPT_DIR}/.claude" ]]; then
+sync_claude_code() {
+    if [[ ! -d "${SCRIPT_DIR}/.claude" ]]; then
+        print_line "${YELLOW}[Claude Code] 源目录不存在，跳过${NC}"
+        return 0
+    fi
+
     print_line "${GREEN}[Claude Code] 开始同步${NC}"
 
     # 确保目标目录存在
@@ -295,14 +364,16 @@ except Exception:
             print_line "${GREEN}✓ 所有推荐插件已安装${NC}"
         fi
     fi
-else
-    print_line "${YELLOW}[Claude Code] 源目录不存在，跳过${NC}"
-fi
 
-printf '\n'
+    return 0
+}
 
-# --- Gemini CLI ---
-if [[ -d "${SCRIPT_DIR}/.gemini" ]]; then
+sync_gemini_cli() {
+    if [[ ! -d "${SCRIPT_DIR}/.gemini" ]]; then
+        print_line "${YELLOW}[Gemini CLI] 源目录不存在，跳过${NC}"
+        return 0
+    fi
+
     print_line "${GREEN}[Gemini CLI] 开始同步${NC}"
 
     # 确保目标目录存在
@@ -402,17 +473,19 @@ except Exception:
             print_line "${GREEN}✓ 所有推荐扩展已安装${NC}"
         fi
     fi
-else
-    print_line "${YELLOW}[Gemini CLI] 源目录不存在，跳过${NC}"
-fi
 
-printf '\n'
+    return 0
+}
 
-# --- Codex ---
-if [[ -d "${SCRIPT_DIR}/.codex" ]]; then
+sync_codex() {
+    if [[ ! -d "${SCRIPT_DIR}/.codex" ]]; then
+        print_line "${YELLOW}[Codex] 源目录不存在，跳过${NC}"
+        return 0
+    fi
+
     print_line "${GREEN}[Codex] 开始同步${NC}"
 
-    mkdir -p ~/.codex ~/.codex/rules ~/.codex/instructions ~/.agents/skills
+    mkdir -p ~/.codex ~/.codex/rules ~/.codex/instructions ~/.codex/templates ~/.codex/tasks ~/.codex/tasks/archived ~/.agents/skills
 
     CODEX_RULES_SYNCED=0
     CODEX_INSTRUCTIONS_SYNCED=0
@@ -423,6 +496,10 @@ if [[ -d "${SCRIPT_DIR}/.codex" ]]; then
     CODEX_RULES_SRC="${SCRIPT_DIR}/.codex/global/rules"
     CODEX_INSTRUCTIONS_SRC="${SCRIPT_DIR}/.codex/instructions"
     CODEX_SKILLS_SRC="${SCRIPT_DIR}/.codex/skills"
+    CODEX_TEMPLATES_SRC="${SCRIPT_DIR}/.codex/templates"
+    CODEX_TEMPLATES_DST="${HOME}/.codex/templates"
+    CODEX_TASKS_SRC="${SCRIPT_DIR}/.codex/tasks"
+    CODEX_TASKS_DST="${HOME}/.codex/tasks"
 
     if [[ -f "$CODEX_AGENTS_SRC" ]]; then
         merge_managed_block "$CODEX_AGENTS_SRC" "$CODEX_AGENTS_DST" "$CODEX_MANAGED_START" "$CODEX_MANAGED_END"
@@ -443,6 +520,16 @@ if [[ -d "${SCRIPT_DIR}/.codex" ]]; then
         sync_managed_skills "$CODEX_SKILLS_SRC" "${HOME}/.agents/skills"
     fi
 
+    if [[ -d "$CODEX_TEMPLATES_SRC" ]]; then
+        sync_managed_optional_tree "$CODEX_TEMPLATES_SRC" "$CODEX_TEMPLATES_DST"
+    fi
+
+    if [[ -d "$CODEX_TASKS_SRC" ]]; then
+        sync_managed_optional_tree "$CODEX_TASKS_SRC" "$CODEX_TASKS_DST"
+    fi
+
+    sync_codex_project_skeleton
+
     CODEX_PROFILES_SRC="${SCRIPT_DIR}/.codex/profiles"
     CODEX_CONFIG_DST="${HOME}/.codex/config.toml"
     CODEX_PROFILES_SYNCED=0
@@ -459,15 +546,18 @@ if [[ -d "${SCRIPT_DIR}/.codex" ]]; then
     print_line "${GREEN}  ✓ rules: ${CODEX_RULES_SYNCED} 个，同步到 ~/.codex/rules/${NC}"
     print_line "${GREEN}  ✓ instructions: ${CODEX_INSTRUCTIONS_SYNCED} 个，同步到 ~/.codex/instructions/${NC}"
     print_line "${GREEN}  ✓ skills: ${CODEX_SKILLS_SYNCED} 个，同步到 ~/.agents/skills/${NC}"
+    print_line "${GREEN}  ✓ templates/tasks 目录骨架已同步到 ~/.codex/${NC}"
+    print_line "${GREEN}  ✓ 项目 .codex 骨架模板已同步到 ~/.codex/project-template/${NC}"
     print_line "${YELLOW}  已保留 ~/.codex 运行态文件（auth/history/logs/cache）${NC}"
-else
-    print_line "${YELLOW}[Codex] 源目录不存在，跳过${NC}"
-fi
+    return 0
+}
 
-printf '\n'
+sync_github_copilot() {
+    if [[ ! -d "${SCRIPT_DIR}/.github" ]]; then
+        print_line "${YELLOW}[GitHub Copilot] 源目录不存在，跳过${NC}"
+        return 0
+    fi
 
-# --- GitHub Copilot ---
-if [[ -d "${SCRIPT_DIR}/.github" ]]; then
     print_line "${GREEN}[GitHub Copilot] 开始同步${NC}"
 
     mkdir -p ~/.github ~/.github/instructions
@@ -500,14 +590,15 @@ if [[ -d "${SCRIPT_DIR}/.github" ]]; then
     fi
 
     print_line "${GREEN}  ✓ instructions: ${COPILOT_INSTRUCTIONS_SYNCED} 个，同步到 ~/.github/instructions/${NC}"
-else
-    print_line "${YELLOW}[GitHub Copilot] 源目录不存在，跳过${NC}"
-fi
+    return 0
+}
 
-printf '\n'
+sync_cursor() {
+    if [[ ! -d "${SCRIPT_DIR}/.cursor" ]]; then
+        print_line "${YELLOW}[Cursor] 源目录不存在，跳过${NC}"
+        return 0
+    fi
 
-# --- Cursor ---
-if [[ -d "${SCRIPT_DIR}/.cursor" ]]; then
     print_line "${GREEN}[Cursor] 开始同步${NC}"
 
     mkdir -p ~/.cursor/rules ~/.cursor/skills ~/.cursor/templates
@@ -614,11 +705,25 @@ if [[ -d "${SCRIPT_DIR}/.cursor" ]]; then
     print_line "${GREEN}  ✓ commands: ${CURSOR_COMMANDS_SYNCED} 个，同步到 ~/.cursor/skills/（命令式技能兼容层）${NC}"
     print_line "${GREEN}  ✓ templates: 同步到 ~/.cursor/templates/${NC}"
     print_line "${YELLOW}  项目内 .cursor/rules 仍是主路径；已保留 ~/.cursor 运行态文件（settings/extensions/cache）${NC}"
-else
-    print_line "${YELLOW}[Cursor] 源目录不存在，跳过${NC}"
+    return 0
+}
+
+run_sync_section "Claude Code" sync_claude_code
+printf '\n'
+run_sync_section "Gemini CLI" sync_gemini_cli
+printf '\n'
+run_sync_section "Codex" sync_codex
+printf '\n'
+run_sync_section "GitHub Copilot" sync_github_copilot
+printf '\n'
+run_sync_section "Cursor" sync_cursor
+printf '\n'
+
+if [[ "$SYNC_FAILURES" -gt 0 ]]; then
+    print_line "${YELLOW}=== 同步完成（含 ${SYNC_FAILURES} 个分段失败）===${NC}"
+    exit 1
 fi
 
-printf '\n'
 print_line "${GREEN}=== 同步完成 ===${NC}"
 print_line "${YELLOW}提示: 若在项目目录运行 gemini 出现 'Skill conflict detected' 警告：${NC}"
 print_line "  这是由于 Gemini CLI 同时加载了全局 (~/.gemini) 和局部 (.gemini) 配置，属于预期行为。"
