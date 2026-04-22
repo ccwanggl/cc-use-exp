@@ -186,7 +186,7 @@ tools\sync-config.bat
 - `.cursor/templates/*` → `~/.cursor/templates/`
 - `.github/copilot-instructions.md` → `~/.github/copilot-instructions.md`
 - `.github/instructions/*.instructions.md` → `~/.github/instructions/`
-- `AGENTS.md`（若仓库存在）→ `~/.github/AGENTS.md`
+- 本地 `AGENTS.md`（若仓库存在）→ `~/.github/AGENTS.md`
 
 其中 Codex 采用**增量部署**：
 
@@ -211,7 +211,7 @@ tools\sync-config.bat
 | Codex | `.codex/` | `~/.codex/` + `~/.agents/skills/` | 会话内或 Shell | ✅ 完整支持（增量部署） |
 | Gemini CLI | `.gemini/` | `~/.gemini/` | Shell 脚本 | ✅ 完整支持 |
 | Cursor | `.cursor/` | 项目内 + 用户级 | Shell 脚本 | ✅ 完整支持 |
-| GitHub Copilot | `.github/` + `AGENTS.md` | `~/.github/` + 仓库内 | Shell 脚本 | ✅ 新增支持 |
+| GitHub Copilot | `.github/` + 可选本地 `AGENTS.md` | `~/.github/` + 仓库内 | Shell 脚本 | ✅ 新增支持 |
 
 **安装方式详情**：
 
@@ -259,7 +259,7 @@ tools\sync-config.bat
 ├── .gemini/  ──覆盖──>    ~/.gemini/  <──读取──                 .gemini/ (空)
 ├── .codex/   ──增量部署──> ~/.codex/ + ~/.agents/skills/ <──读取── .codex/ (空)
 ├── .cursor/  ──项目内 rules + 用户级兼容同步──> ~/.cursor/skills/ + ~/.cursor/templates/ <──读取── .cursor/ (空)
-└── .github/ + AGENTS.md ──覆盖/兜底──> ~/.github/ <──读取── .github/ + AGENTS.md
+└── .github/ + 可选本地 AGENTS.md ──覆盖/兜底──> ~/.github/ <──读取── .github/ + 本地 AGENTS.md
 ```
 
 - **本项目**：配置开发/维护环境，不参与实际业务开发
@@ -273,7 +273,7 @@ tools\sync-config.bat
 | `.claude/` | Claude Code | Anthropic 的 CLI 工具 |
 | `.gemini/` | Gemini CLI | Google 的 CLI 工具 |
 | `.codex/` | Codex | OpenAI 的 CLI 工具，项目内维护权威源，部署时分发到 `~/.codex/` 和 `~/.agents/skills/` |
-| `.github/` + `AGENTS.md` | GitHub Copilot | GitHub Copilot / coding agent 的仓库级配置与用户级兜底配置 |
+| `.github/` + 可选本地 `AGENTS.md` | GitHub Copilot | GitHub Copilot / coding agent 的仓库级配置；若项目本地存在 `AGENTS.md`，可作为额外兜底配置 |
 | `.cursor/` | Cursor | AI IDE，项目内 `.cursor/rules/` 为主；用户级复用 `~/.cursor/skills/`、`~/.cursor/templates/`，并兼容性同步 `~/.cursor/rules/` |
 
 **四者相互独立**：
@@ -466,9 +466,15 @@ bash <(curl -sL https://raw.githubusercontent.com/doccker/cc-use-exp/main/tools/
 
 **高频工作流**：`$fix`、`$review`、`$commit-msg`
 
-**中频工作流**：`$optimize`、`$new-feature`、`$design`、`$requirement`
+**中频工作流**：`$optimize`、`$new-feature`、`$design`、`$requirement`、`$cc-task-state`
 
-**低频工作流**：`$skill-update`、`$project-init`、`$status`
+**低频工作流**：`$skill-update`、`$project-init`、`$project-scan`、`$status`
+
+项目级任务状态默认持久化到当前项目的 `.codex/tasks/`：
+
+- `$project-init` / `$project-scan` 用于补齐项目级 `.codex` 最小骨架
+- `$new-feature` 用于完整功能开发与任务推进
+- `$cc-task-state` 用于沉淀“还没开始 / 被打断 / 待恢复”的任务状态，避免进展只留在对话里
 
 使用 `codex -p cc-custom-instructions`
 ![Chrome 插件独立配置界面（可指定自定义模型）](./pic/codex-unlock.png)

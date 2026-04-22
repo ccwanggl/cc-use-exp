@@ -1,0 +1,6 @@
+interface:
+  display_name: "project-scan"
+  short_description: "扫描仓库并生成或刷新项目级 AGENTS.md。"
+  default_prompt: "Use $project-scan to inspect this repository, summarize the detected stack and project conventions, initialize the minimal project-local .codex skeleton (.codex/tasks, .codex/tasks/archived, .codex/templates) if missing, and then create or update the repository-root AGENTS.md for Codex. Reuse the existing project-init AGENTS template, prefer AUTO block incremental updates when AGENTS.md already exists, and ask the user before any first-time full rebuild of an existing AGENTS.md."
+policy:
+  allow_implicit_invocation: false

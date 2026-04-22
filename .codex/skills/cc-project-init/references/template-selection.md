@@ -11,7 +11,7 @@
 
 | 资源 | 适用场景 |
 |------|---------|
-| `assets/AGENTS.project.md` | 需要项目级 Codex 指导文件 |
+| `assets/AGENTS.project.md` | 需要项目级 Codex 指导文件，并为后续 `project-scan` 预留 `AUTO:*` 自动区块 |
 | `assets/codex-skeleton/` | 需要让项目原生支持 `new-feature` 任务持久化 |
 | `assets/gitignore-go.tmpl` | Go 后端仓库缺少 `.gitignore` |
 | `assets/dockerignore.tmpl` | 需要新增 `Dockerfile` 或容器构建 |
@@ -29,5 +29,5 @@
 - `.codex` 骨架只补目录与占位文件，避免覆盖项目已有任务文件或模板文件。
 - 同时需要 MySQL 和 Redis 时，以其中一份为骨架，按当前项目配置手工合并。
 - `restart-*.sh` 只适合单服务项目；已有 systemd、supervisor、容器编排时通常不该新增。
-- `AGENTS.project.md` 应替换占位符，并删除不适用章节，不要把模板原样提交。
+- `AGENTS.project.md` 应替换占位符，并删除不适用章节，不要把模板原样提交；保留 `AUTO:*` 区块结构，便于后续增量刷新。
 - `.claudeignore.tmpl` 和软著相关文件不属于 Codex 项目初始化范围，故未迁入本技能。

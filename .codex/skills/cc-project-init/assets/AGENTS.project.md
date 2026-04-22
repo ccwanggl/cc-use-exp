@@ -8,8 +8,9 @@
 使用说明：
 1. 复制此文件到仓库根目录的 AGENTS.md
 2. 替换 [方括号] 中的内容
-3. 删除不需要的章节和注释
-4. 只保留项目特定约定，不重复用户级全局规则
+3. 将可重复扫描刷新的内容放入 AUTO 区块
+4. 删除不需要的章节和注释
+5. 只保留项目特定约定，不重复用户级全局规则
 -->
 
 ---
@@ -22,6 +23,7 @@
 
 ## 技术栈
 
+<!-- AUTO:tech-stack -->
 | 层级 | 技术 | 版本 |
 |------|------|------|
 | 后端 | Go / Java / Node.js / Python | x.x+ |
@@ -32,11 +34,13 @@
 | 前端语言 | TypeScript / JavaScript | x.x+ |
 | UI 组件库 | Element Plus / Ant Design / 无 | x.x+ |
 | 构建工具 | Vite / Webpack / 无 | x.x+ |
+<!-- /AUTO:tech-stack -->
 
 ---
 
 ## 目录结构
 
+<!-- AUTO:directory -->
 ```text
 项目名/
 ├── cmd/ / src/main/java / app/  # 入口与启动
@@ -51,6 +55,7 @@
 ├── deploy/ / scripts/           # 部署与脚本（如有）
 └── go.mod / pom.xml / package.json / pyproject.toml
 ```
+<!-- /AUTO:directory -->
 
 ---
 
@@ -67,6 +72,7 @@
 
 ### API 规范
 
+<!-- AUTO:api-contract -->
 ```go
 type Response struct {
     Code    int         `json:"code"`
@@ -89,6 +95,7 @@ public class Result<T> {
 - `1xxx`: 参数错误
 - `2xxx`: 业务错误
 - `5xxx`: 系统错误
+<!-- /AUTO:api-contract -->
 
 ### 前端规范
 
@@ -102,6 +109,7 @@ public class Result<T> {
 
 ## 常用操作
 
+<!-- AUTO:commands -->
 ```bash
 # 开发模式
 ./restart.sh
@@ -112,6 +120,15 @@ go build ./... / mvn package / uv run pytest / npm run build
 # 前端开发
 cd web && npm run dev
 ```
+<!-- /AUTO:commands -->
+
+---
+
+## 高风险区域
+
+<!-- AUTO:risk-areas -->
+- 待补充：部署脚本、数据库迁移、CI/CD、网关与环境配置等高风险区域
+<!-- /AUTO:risk-areas -->
 
 ---
 

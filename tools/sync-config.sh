@@ -549,6 +549,8 @@ sync_codex() {
     print_line "${GREEN}  ✓ templates/tasks 目录骨架已同步到 ~/.codex/${NC}"
     print_line "${GREEN}  ✓ 项目 .codex 骨架模板已同步到 ~/.codex/project-template/${NC}"
     print_line "${YELLOW}  已保留 ~/.codex 运行态文件（auth/history/logs/cache）${NC}"
+    printf '\n'
+    print_line "${YELLOW}[Codex] 若要在其他项目中持久化任务，请在目标项目根目录执行 \$project-init、\$project-scan 或 \$new-feature${NC}"
     return 0
 }
 

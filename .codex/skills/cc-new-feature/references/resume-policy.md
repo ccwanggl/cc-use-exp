@@ -9,6 +9,7 @@
 处理原则：
 
 - 每次运行先确保项目内 `.codex/tasks/` 与 `.codex/tasks/archived/` 存在；必须先尝试 `mkdir -p .codex/tasks/archived`，若可创建则不把“目录缺失”视为不可写
+- 即使 `.codex/tasks/` 已存在，也必须先尝试项目根目录写入动作；不能因为“已有骨架”就跳过写入检查
 - 每次运行先扫描 `.codex/tasks/` 根目录；状态已是“已完成”的任务直接移到 `.codex/tasks/archived/`
 - 未完成任务只有一个时，直接询问是否继续
 - 有多个未完成任务时，列出名称和更新时间，让用户选

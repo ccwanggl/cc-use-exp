@@ -84,6 +84,10 @@ cp -R ~/.codex/project-template/.codex/templates ./.codex/
 
 这样 `$new-feature` 在检查项目内 `.codex/tasks/` 时会直接命中可写目录，而不是误判为“项目目录不可写”。
 
+如果该项目根目录下还没有 `.codex/tasks/`，`$project-init` 会优先在项目内创建 `.codex/tasks/`、`.codex/tasks/archived/`、`.codex/templates/`。若当前 Codex 会话对该项目目录没有写权限，应该触发平台原生审批提示；用户授权后继续初始化，而不是直接回退成“目录不可写”的文本提示。
+
+注意：`./tools/sync-config.sh` 只负责把项目模板和技能同步到用户级位置，不会替你在“其他项目”里实际创建项目级 `.codex/tasks/`。因此，**同步完成后**，你仍然需要在目标项目里运行 `$project-init` 或 `$new-feature`，让它在当前项目根目录真正落盘任务骨架与任务文件。
+
 如果当前 Codex 会话对该项目目录尚未拿到写权限，`new-feature` / `project-init` 在尝试初始化项目内 `.codex/tasks/`、`.codex/tasks/archived/`、`.codex/templates/` 时，应优先触发 Codex 平台原生审批提示，由用户授权后继续；这不是自定义 UI 弹窗，而是平台自带的写入授权流程。
 
 如果你在其他项目里执行 `$new-feature` 时**没有看到平台审批提示**，而是直接收到“项目内 `.codex/tasks/` 不可写”之类的文本提示，优先按下面顺序排查：
@@ -105,6 +109,17 @@ cp -R ~/.codex/project-template/.codex/templates ./.codex/
    - 即使规则允许 `mkdir -p .codex/tasks ...` 走审批
    - 如果当前会话对整个项目目录没有可写权限，仍可能在授权后失败
 
+4. **如果项目内骨架已齐全但仍无法写入**
+   - 优先怀疑当前 Codex 会话运行在受限 sandbox / workspace scope 中
+   - 这时“目录存在”不代表“当前会话已对该目录具备写权限”
+   - 需要确保会话是在目标项目根目录启动，或者重启到覆盖该项目的可写工作区后再试
+
+可直接套用的结论模板：
+
+- **目录缺失**：先做项目级初始化，问题不在沙箱结论本身
+- **目录存在但未触发审批**：优先怀疑 workflow 还没走到真正的项目根目录写入动作
+- **目录存在且写入被拦截**：优先怀疑当前会话仍在受限 sandbox / workspace scope 中
+
 推荐顺序：
 
 ```text
@@ -114,6 +129,12 @@ cp -R ~/.codex/project-template/.codex/templates ./.codex/
 ```
 
 这样通常比直接在“还没有项目级 `.codex` 骨架”的仓库里先跑 `$new-feature` 更稳。
+
+如果你已经看到项目内有 `.codex/tasks/`，但 `$new-feature` 仍然提示无法持久化任务，优先判断两件事：
+
+1. 当前会话是否真的在**项目根目录**执行了写入动作
+2. 当前项目目录是否在 Codex 的可写工作区内；如果是首次写入，应该先看到平台审批提示
+3. 当前会话是否其实还停留在受限 sandbox / workspace scope 中，导致“目录存在”但“写入仍被拦截”
 
 **为什么不是直接复制到 `~/.codex/`？**
 
