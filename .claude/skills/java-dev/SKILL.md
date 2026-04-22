@@ -505,6 +505,54 @@ log.debug("Finding user by id: " + userId);
 
 ---
 
+## Spring Bean 命名冲突
+
+**场景**: 不同包下创建了同名 Controller/Service 类，导致 Spring 启动时 Bean 注册冲突
+
+### 问题根因
+
+Spring 默认按类名首字母小写生成 bean name。如果两个类名相同但在不同包下，默认 bean name 会冲突，导致 `BeanDefinitionStoreException`。
+
+### 错误示例
+
+```java
+// ❌ 错误: 两个包下同名类
+// com.trade.controller.MiniAppConfigController
+@RestController
+@RequestMapping("/mini-app-config")
+public class MiniAppConfigController { }
+
+// com.trade.controller.mini.MiniAppConfigController
+@RestController
+@RequestMapping("/mini/config")
+public class MiniAppConfigController { }
+
+// 启动报错: BeanDefinitionStoreException
+// 两个类的默认 bean name 都是 miniAppConfigController
+```
+
+### 正确做法
+
+```java
+// ✅ 方案1: 使用不同类名（推荐）
+@RestController
+@RequestMapping("/mini/config")
+public class MiniPublicConfigController { }  // 改名避免冲突
+
+// ✅ 方案2: 显式指定 bean name
+@RestController("miniPublicConfigController")
+@RequestMapping("/mini/config")
+public class MiniAppConfigController { }
+```
+
+### 检查清单
+
+- [ ] 新增 Controller/Service 时，是否检查了项目中是否已有同名类
+- [ ] 不同包下的同名类是否使用了不同的类名或显式 bean name
+- [ ] 启动报 `BeanDefinitionStoreException` 时，是否优先排查同名 bean
+
+---
+
 ## 详细参考
 
 | 文件 | 内容 |

@@ -519,6 +519,72 @@ render: (val: string) => new Date(val).toLocaleString()
 
 ---
 
+## 陷阱 #9: 散弹式修复（Shotgun Fix）
+
+**场景**: 同一个问题在多个文件中重复出现，修复时逐个文件加相同的补丁代码，而不是抽取共享逻辑
+
+### 问题根因
+
+当一个横切关注点（如图片 URL 补全、金额格式化、权限校验）散落在多个 Service 中时，修复者容易"哪里报错修哪里"，最终在 5+ 个文件里各写一份几乎相同的方法。
+
+### 错误示例
+
+```java
+// ❌ 错误: 7 个 Service 各写一份 resolveImageUrl
+// ProductService.java
+private String resolveImageUrl(String url) {
+    if (url == null || url.startsWith("http")) return url;
+    return minioService.getPresignedUrl(url, 60 * 24 * 7);
+}
+
+// MiniProductService.java — 又写一份
+private String resolveImageUrl(String url) { /* 同样逻辑 */ }
+
+// CartService.java — 又写一份
+private String resolveImageUrl(String url) { /* 同样逻辑 */ }
+```
+
+### 正确做法
+
+```java
+// ✅ 正确: 先全局扫描，再抽取共享工具，一次性补齐
+// 第 1 步: 全局扫描受影响的位置
+// Grep: pattern="getImageUrl|mainImage|imageUrl" type="java"
+
+// 第 2 步: 抽取共享工具类
+@Component
+public class ImageUrlResolver {
+    private final MinioService minioService;
+
+    public String resolve(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) return imageUrl;
+        if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+            return imageUrl;
+        }
+        return minioService.getPresignedUrl(imageUrl, 60 * 24 * 7);
+    }
+}
+
+// 第 3 步: 所有 Service 统一注入并使用
+```
+
+### 识别信号
+
+| 信号 | 说明 |
+|------|------|
+| 同一个 private 方法在 3+ 个类里出现 | 应抽成共享工具 |
+| 修复一个接口后，用户又报另一个接口同样的问题 | 应先全局扫描再一次性修 |
+| 修复 diff 里有 5+ 个文件的相同改动模式 | 应抽取公共逻辑 |
+
+### 检查清单
+
+- [ ] 修复前是否先做了全局扫描（grep），确认所有受影响的位置
+- [ ] 同一修复模式是否出现在 3+ 个文件中（如果是，应抽取共享方法）
+- [ ] 是否一次性补齐所有受影响的链路（而非等用户逐个报）
+- [ ] 新增的共享工具方法是否有明确的职责边界和命名
+
+---
+
 ## 规则溯源
 
 ```

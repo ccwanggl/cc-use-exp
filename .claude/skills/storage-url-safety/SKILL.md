@@ -243,6 +243,80 @@ String avatarUrl = "https://cdn.example.com/avatars/xxx.jpeg";
 
 ---
 
+## 陷阱 #6: 响应层 URL 补全逻辑散落在各 Service
+
+**场景**: 数据库存储相对路径（如 `images/4/2026-04/xxx.png`），多个 Service 各自写一份 `resolveImageUrl` 方法将 path 转为可访问 URL
+
+### 问题根因
+
+当"数据库存 path、响应时补全 URL"成为项目约定后，每个返回图片字段的 Service 都需要做 URL 补全。如果没有统一工具方法，就会出现：
+- 7+ 个 Service 各写一份几乎相同的 `resolveImageUrl`
+- 新增接口时容易忘记补全，导致前端拿到相对路径无法显示图片
+- 修复时逐个 Service 排查，形成"散弹式修复"
+
+### 错误示例
+
+```java
+// ❌ 错误: 每个 Service 各写一份
+// ProductService.java
+private String resolveImageUrl(String imageUrl) {
+    if (imageUrl == null || imageUrl.startsWith("http")) return imageUrl;
+    return minioService.getPresignedUrl(imageUrl, 60 * 24 * 7);
+}
+
+// MiniProductService.java — 又写一份
+private String resolveImageUrl(String imageUrl) { /* 同样逻辑 */ }
+
+// CartService.java — 又写一份
+private String resolveImageUrl(String imageUrl) { /* 同样逻辑 */ }
+
+// MiniOrderService.java — 又写一份...
+```
+
+### 正确做法
+
+```java
+// ✅ 正确: 抽成共享工具类，所有 Service 复用
+@Component
+public class ImageUrlResolver {
+    private final MinioService minioService;
+
+    public String resolve(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) return imageUrl;
+        if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+            return imageUrl;
+        }
+        return minioService.getPresignedUrl(imageUrl, 60 * 24 * 7);
+    }
+
+    public List<String> resolveAll(List<String> urls) {
+        if (urls == null) return List.of();
+        return urls.stream().map(this::resolve).toList();
+    }
+}
+
+// 各 Service 注入后直接用
+@Service
+public class ProductService {
+    private final ImageUrlResolver imageUrlResolver;
+
+    private ProductDTO convertToDTO(Product product) {
+        return ProductDTO.builder()
+            .mainImageUrl(imageUrlResolver.resolve(mainImagePath))
+            .build();
+    }
+}
+```
+
+### 检查清单
+
+- [ ] 项目中是否有统一的图片 URL 补全工具类
+- [ ] 新增返回图片字段的接口时，是否经过了统一补全
+- [ ] 是否存在 3+ 个 Service 各自写了相同的 URL 补全逻辑
+- [ ] 修复图片显示问题时，是否先做全局扫描（grep `getImageUrl`）再一次性补齐
+
+---
+
 ## 检查清单（存储 URL 策略）
 
 **URL 策略选择**:
@@ -266,6 +340,11 @@ String avatarUrl = "https://cdn.example.com/avatars/xxx.jpeg";
 - [ ] 前端直传是否校验文件类型和大小
 - [ ] 文件名是否使用 UUID 防止路径遍历
 - [ ] 私密文件是否使用预签名 URL 而非公开 URL
+
+**响应层 URL 补全**:
+- [ ] 是否有统一的图片 URL 补全工具类（而非各 Service 各写一份）
+- [ ] 新增图片字段接口是否经过统一补全
+- [ ] 修复图片问题时是否先全局扫描再一次性补齐
 
 ---
 
