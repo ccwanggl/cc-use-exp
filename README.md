@@ -16,12 +16,32 @@
 [![Gemini CLI](https://img.shields.io/badge/Gemini_CLI-Config-purple.svg)](https://github.com/google-gemini/gemini-cli)
 [![Codex](https://img.shields.io/badge/Codex-Config-black.svg)](https://developers.openai.com/codex/)
 [![Cursor](https://img.shields.io/badge/Cursor-Config-blue.svg)](https://www.cursor.com/)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/doccker/cc-use-exp/pulls)
 [![GitHub stars](https://img.shields.io/github/stars/doccker/cc-use-exp)](https://github.com/doccker/cc-use-exp/stargazers)
 [![GitHub forks](https://img.shields.io/github/forks/doccker/cc-use-exp)](https://github.com/doccker/cc-use-exp/network)
 [![GitHub watchers](https://img.shields.io/github/watchers/doccker/cc-use-exp)](https://github.com/doccker/cc-use-exp/watchers)
 
 </div>
+
+---
+
+> [!IMPORTANT]
+>
+> ## 📢 本仓库已停止更新 / This Repository Is No Longer Maintained
+>
+> **中文**：因开源版权屡遭侵权，本仓库停止更新，现有内容保持可用。全部新能力已迁移至新项目 **[dev-agent-kit/recipes](https://github.com/dev-agent-kit/recipes)** 持续维护，新内容只在新项目更新。
+>
+> 新项目相比本仓库已额外提供（并持续完善）：
+>
+> - **pi 编辑器完整支持**（第 7 个平台）：增强配置、危险命令拦截、配额状态栏
+> - **AI 工具统一 CLI 状态栏**：模型 + 配额实时显示，多工具共享数据契约
+> - **新增 skills 七平台同步**：诊断纪律、落盘验证、前端布局陷阱等
+> - **native binary 探测与补丁自动派发**：工具链升级不再手动返工
+>
+> 加入方式：付费小群（一次性 **¥699**，终身更新 + 专属技术群；设置门槛是为了保障付费成员的维护质量）。微信 `shi10xiu` 或扫描文末二维码，备注“进小群”。
+>
+> **English**: Due to repeated license violations, this repository is no longer maintained (existing content remains available). All new development has moved to **[dev-agent-kit/recipes](https://github.com/dev-agent-kit/recipes)** — new features ship there only, including full **pi editor support** (7th platform), a unified CLI status bar (model + quota), new skills synced across 7 platforms, and automated native-binary patch dispatch.
+>
+> Access: paid membership (one-time **¥699 ≈ $99**, lifetime updates + private tech group). International users: email **doccker@pm.me**.
 
 ---
 
@@ -689,9 +709,15 @@ bash <(curl -sL https://raw.githubusercontent.com/doccker/cc-use-exp/main/tools/
 
 商业授权咨询：`作者` | 详见 [LICENSE](./LICENSE)
 
-### 联系作者
+### 联系作者 / Contact
 
-<img src="pic/wx-hao.png" alt="微信 wechat" width="400" />
+本仓库已停更，新内容只在 **[dev-agent-kit/recipes](https://github.com/dev-agent-kit/recipes)** 更新。
+
+- 加入付费小群（¥699 一次性，终身更新 + 专属技术群）：微信 `shi10xiu` 或扫描下方二维码，备注“进小群”
+- International users / 英文用户：email **doccker@pm.me**
+
+<img src="pic/wx-hao.png" alt="微信 wechat" width="200" />
+
 ---
 
 ## Star History
